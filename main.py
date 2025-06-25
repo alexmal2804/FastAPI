@@ -1,15 +1,12 @@
-# This is a sample Python script.
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+import os
 
-# Press Ctrl+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+app = FastAPI()
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press F9 to toggle the breakpoint.
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+@app.get("/")
+def root():
+    # Получаем абсолютный путь к файлу
+    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
+    print(f"Serving file from: {file_path}")  # Для отладки
+    return FileResponse(file_path)
