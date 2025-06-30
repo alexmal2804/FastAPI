@@ -1,0 +1,29 @@
+# Core
+fastapi
+uvicorn[standard]
+
+# Валидация и сериализация
+pydantic
+
+# Асинхронная работа с PostgreSQL через SQLAlchemy
+sqlalchemy
+asyncpg
+
+# Alembic для миграций БД
+alembic
+
+# Авторизация по JWT
+python-jose[cryptography]
+passlib[bcrypt]
+
+# Загрузка файлов
+python-multipart
+
+# Асинхронные HTTP-запросы (например, для интеграций)
+httpx
+
+# Шаблоны (если нужен HTML вывод)
+jinja2
+
+# Опционально — для .env файлов
+python-dotenv
