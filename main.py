@@ -1,12 +1,16 @@
 from fastapi import FastAPI
+import uvicorn
 from fastapi.responses import FileResponse
 import os
-
 app = FastAPI()
-
 @app.get("/")
-def root():
+def read_root():
     # Получаем абсолютный путь к файлу
-    file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "index.html")
-    print(f"Serving file from: {file_path}")  # Для отладки
-    return FileResponse(file_path)
+    return {"message": "Hello World"}
+
+@app.get("/custom")
+def read_custom_message():
+    return {"message": "This is a custom message!!!"}
+
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", reload=True)
