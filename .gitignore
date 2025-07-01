@@ -1,3 +1,19 @@
 .env
 .venv
 .vscode
+#pre-commit.ps1
+#.flake8
+#.pre-commit-config.yaml
+#.isort.cfg
+#.black
+## Python cache files
+#__pycache__/
+## Byte-compiled files
+#*.py[cod]
+## Distribution / packaging
+#.Python
+#build/
+#develop-eggs/
+#dist/
+#downloads/
+#eggs/

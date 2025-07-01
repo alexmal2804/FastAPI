@@ -1,9 +1,9 @@
 # Core
-fastapi
+fastapi~=0.115.13
 uvicorn[standard]
 
 # Валидация и сериализация
-pydantic
+pydantic~=2.11.7
 
 # Асинхронная работа с PostgreSQL через SQLAlchemy
 sqlalchemy
@@ -27,3 +27,5 @@ jinja2
 
 # Опционально — для .env файлов
 python-dotenv
+
+environs~=14.2.0
