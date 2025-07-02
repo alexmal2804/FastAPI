@@ -1,0 +1,77 @@
+# Python
+from fastapi import FastAPI
+
+from .config import load_config
+from .logger import logger
+from .models import User
+
+
+app = FastAPI()
+
+
+class UsersAge(User):
+    is_adult: bool = True
+
+    def __init__(self, name: str, age: int, **kwargs):
+        super().__init__(name=name, age=age, **kwargs)
+        self.is_adult = age >= 18
+
+
+user = UsersAge(name="John Doe", age=17)
+
+
+@app.get("/")
+# Python
+@app.get("/")
+def read_root(userName: str = "Alex"):
+    try:
+        logger.info("Начало выполнения read_root")
+        config = load_config()
+        logger.info(f"Конфигурация загружена: {config}")
+        logger.info(f"Connected to database: {config.db.database_url}")
+        return {"database_url": config.db.database_url, "name": userName}
+    except Exception as e:
+        logger.error(f"Ошибка: {e}")
+        logger.error(f"Error connecting to database: {e}")
+        return {"error": "Failed to connect to database"}
+
+
+@app.get("/custom")
+def read_custom_message():
+    return {"message": "This is a custom message!!!"}
+
+
+@app.get("/users")
+def get_user():
+    # return {"name": user.name, "id": user.id}
+    return user.__dict__
+
+
+@app.post("/users")
+def create_user(user: UsersAge):
+    return user.__dict__
+
+
+@app.get("/users/{id}")
+def get_user_by_id(id: int):
+    return {"user_id": id}
+
+
+@app.put("/users/{user_id}")
+def update_user(user_id: int, user: UsersAge):
+    return {"user_id": user_id, "user": user.__dict__}
+
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int):
+    return {"user_id": user_id}
+
+
+@app.get("/users/name/{name}")
+def get_user_by_name(name: str):
+    return {"name": name}
+
+
+@app.get("/users/age/{age}")
+def get_user_by_age(age: int):
+    return {"age": age}

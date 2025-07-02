@@ -17,6 +17,7 @@ class Config:
     secret_key: str
     debug: bool = False
 
+
 # Python
 def load_config(path: Optional[str] = None) -> Config:
     env = Env()
