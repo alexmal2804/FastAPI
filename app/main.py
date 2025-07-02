@@ -8,7 +8,14 @@ from .models import User
 
 app = FastAPI()
 
-user = User(name="John Doe", id=1)
+class UsersAge(User):
+    is_adult: bool = True
+
+    def __init__(self, name: str, age: int, **kwargs):
+        super().__init__(name=name, age=age, **kwargs)
+        self.is_adult = age >= 18
+
+user = UsersAge(name = "John Doe", age = 17)
 
 
 @app.get("/")
@@ -16,14 +23,13 @@ user = User(name="John Doe", id=1)
 @app.get("/")
 def read_root():
     try:
-        print("Начало выполнения read_root")
+        logger.info("Начало выполнения read_root")
         config = load_config()
-        print(f"Конфигурация загружена: {config}")
-        logger.debug("Тестовое сообщение для проверки логгера")
+        logger.info(f"Конфигурация загружена: {config}")
         logger.info(f"Connected to database: {config.db.database_url}")
         return {"database_url": config.db.database_url}
     except Exception as e:
-        print(f"Ошибка: {e}")
+        logger.error(f"Ошибка: {e}")
         logger.error(f"Error connecting to database: {e}")
         return {"error": "Failed to connect to database"}
 
@@ -34,5 +40,7 @@ def read_custom_message():
 
 
 @app.get("/users")
-def create_user(user: User):
-    return user
+def get_user():
+    # return {"name": user.name, "id": user.id}
+    return user.__dict__
+

@@ -3,6 +3,8 @@ from typing import Optional
 
 from environs import Env
 
+from .logger import logger
+
 
 @dataclass
 class DataBaseConfig:
@@ -15,30 +17,28 @@ class Config:
     secret_key: str
     debug: bool = False
 
-
-# Python
 # Python
 def load_config(path: Optional[str] = None) -> Config:
     env = Env()
     try:
-        print("Начало загрузки конфигурации...")
+        logger.info("Начало загрузки конфигурации...")
         if path:
-            print(f"Чтение .env файла по указанному пути: {path}")
+            logger.info(f"Чтение .env файла по указанному пути: {path}")
             env.read_env(path)
         else:
-            print("Чтение .env файла из корня проекта")
+            logger.info("Чтение .env файла из корня проекта")
             env.read_env()
-        print("Файл .env загружен успешно")
-        print(f"DATABASE_URL: {env.str('DATABASE_URL', 'sqlite:///app.db')}")
-        print(f"SECRET_KEY: {env.str('SECRET_KEY', 'dev-secret-key-change-in-production')}")
-        print(f"DEBUG: {env.bool('DEBUG', False)}")
+        logger.info("Файл .env загружен успешно")
+        logger.info(f"DATABASE_URL: {env.str('DATABASE_URL', 'sqlite:///app.db')}")
+        logger.info(f"SECRET_KEY: {env.str('SECRET_KEY', 'dev-secret-key-change-in-production')}")
+        logger.info(f"DEBUG: {env.bool('DEBUG', False)}")
         config = Config(
             db=DataBaseConfig(database_url=env.str("DATABASE_URL", "sqlite:///app.db")),
             secret_key=env.str("SECRET_KEY", "dev-secret-key-change-in-production"),
             debug=env.bool("DEBUG", False),
         )
-        print(f"Конфигурация загружена: {config}")
+        logger.info(f"Конфигурация загружена: {config}")
         return config
     except Exception as e:
-        print(f"Ошибка загрузки конфигурации: {e}")
+        logger.error(f"Ошибка загрузки конфигурации: {e}")
         raise
