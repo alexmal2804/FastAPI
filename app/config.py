@@ -28,14 +28,19 @@ def load_config(path: Optional[str] = None) -> Config:
         else:
             logger.info("Чтение .env файла из корня проекта")
             env.read_env()
-        logger.info("Файл .env загружен успешно")
-        logger.info(f"DATABASE_URL: {env.str('DATABASE_URL', 'sqlite:///app.db')}")
-        logger.info(f"SECRET_KEY: {env.str('SECRET_KEY', 'dev-secret-key-change-in-production')}")
-        logger.info(f"DEBUG: {env.bool('DEBUG', False)}")
+
+        database_url = env.str("DATABASE_URL", "sqlite:///app.db")
+        secret_key = env.str("SECRET_KEY", "dev-secret-key-change-in-production")
+        debug = env.bool("DEBUG", False)
+
+        logger.info(f"DATABASE_URL: {database_url}")
+        logger.info(f"SECRET_KEY: {secret_key}")
+        logger.info(f"DEBUG: {debug}")
+
         config = Config(
-            db=DataBaseConfig(database_url=env.str("DATABASE_URL", "sqlite:///app.db")),
-            secret_key=env.str("SECRET_KEY", "dev-secret-key-change-in-production"),
-            debug=env.bool("DEBUG", False),
+            db=DataBaseConfig(database_url=database_url),
+            secret_key=secret_key,
+            debug=debug,
         )
         logger.info(f"Конфигурация загружена: {config}")
         return config
