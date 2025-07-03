@@ -1,5 +1,6 @@
 repos:
   - repo: local
+    # additional_dependencies: [isort, black, flake8]
     hooks:
       - id: isort
         name: isort
