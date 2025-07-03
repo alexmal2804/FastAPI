@@ -29,3 +29,5 @@ jinja2
 python-dotenv
 
 environs~=14.2.0
+
+pymorphy2

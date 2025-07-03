@@ -8,6 +8,9 @@ authors = ["Your Name <your@email.com>"]
 python = ">=3.9"
 fastapi = "*"
 uvicorn = {extras = ["standard"], version = "^0.35.0"}
+pydantic = {extras = ["email"], version = "^2.11.7"}
+pymorphy2 = "^0.9.1"
+setuptools = "^80.9.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "*"

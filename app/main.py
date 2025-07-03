@@ -1,19 +1,13 @@
 # main.py
 from fastapi import FastAPI
-from pydantic import BaseModel
 
-
-class User(BaseModel):
-    id: int
-    username: str
-    age: int
-    email: str
+from .models import Feedback, User1
 
 
 app = FastAPI()
 
 # Пример файковой БД
-fake_users = [
+fake_users: User1 = [
     {"username": "Alex", "age": 20, "email": "alex@gmail.com "},
     {"username": "John", "age": 21, "email": "john@gmail.com"},
     {"username": "Jane", "age": 22, "email": "jane@gmail.com"},
@@ -36,6 +30,8 @@ fake_users = [
     {"username": "Jack", "age": 17, "email": "jack17@gmail.com"},
 ]
 
+fake_feedbacks: Feedback = []
+
 
 @app.get("/users/{user_id}")
 def get_user_by_id(user_id: int):
@@ -53,10 +49,10 @@ def read_users_limit(limit: int = 10, offset: int = 0):
 def read_users(username: str = None, email: str = None, limit: int = 10):
     filtered_users = fake_users
     if username:
-        filtered_users = {key: user for key, user in fake_users.items() if user["username"].lower() == username.lower()}
+        filtered_users = [user for user in fake_users if user["username"].lower() == username.lower()]
     if email:
-        filtered_users = {key: user for key, user in fake_users.items() if user["email"].lower() == email.lower()}
-    return dict(list(filtered_users.items())[:limit])
+        filtered_users = [user for user in filtered_users if user["email"].lower() == email.lower()]
+    return filtered_users[:limit]
 
 
 @app.get("/all_users")
@@ -64,7 +60,13 @@ def read_all_users():
     return fake_users
 
 
-@app.post("/add_user", response_model=User)
-async def add_user(user: User):
+@app.post("/add_user", response_model=User1)
+async def add_user(user: User1):
     fake_users.append({"username": user.username, "age": user.age, "email": user.email})
-    return user  # {"message": f"Пользователь {user} успешно добавлен в базу данных"}
+    return user
+
+
+@app.post("/feedback")
+async def add_feedback(feedback: Feedback):
+    fake_feedbacks.append({"name": feedback.name, "message": feedback.message})
+    return {"message": f"Спасибо, {feedback.name}! Ваш отзыв принят."}
