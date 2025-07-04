@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Загрузка файлов</title>
+    <link rel="icon" href="../app/static/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <form
+      action="http://127.0.0.1:8000/load_files/"
+      method="post"
+      enctype="multipart/form-data"
+    >
+      <label for="files">Выберите файлы:</label>
+      <input
+        type="file"
+        id="files"
+        name="files"
+        multiple
+        title="Выберите один или несколько файлов для загрузки"
+      />
+      <button type="submit">Отправить</button>
+    </form>
+  </body>
+</html>

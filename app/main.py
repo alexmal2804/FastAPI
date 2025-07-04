@@ -1,10 +1,15 @@
 # main.py
-from fastapi import FastAPI
+from typing import List
+
+from fastapi import FastAPI, Form, Query, UploadFile
+from fastapi.staticfiles import StaticFiles
 
 from .models import Feedback, User1
 
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 # Пример файковой БД
 fake_users: list[User1] = [
@@ -34,7 +39,7 @@ fake_feedbacks: list[Feedback] = []
 
 
 @app.get("/limit")
-def read_users_limit(limit: int = 10, offset: int = 0):    
+def read_users_limit(limit: int = 10, offset: int = 0):
     return fake_users[offset : offset + limit]
 
 
@@ -66,3 +71,28 @@ async def add_feedback(feedback: Feedback, is_premium: bool = False):
     if is_premium:
         permium_answer = "Ваш отзыв будет рассмотрен в приоритетном порядке."
     return {"message": f"Спасибо, {feedback.name}! Ваш отзыв принят. {permium_answer}"}
+
+
+@app.post("/register/")
+async def register_user(
+    username: str = Form(...),
+    email: str = Form(...),
+    age: int = Form(...),
+    password: str = Form(...),
+):
+    return {
+        "username": username,
+        "email": email,
+        "age": age,
+        "password_length": len(password),
+    }
+
+
+@app.post("/load_files/")
+async def load_files(files: List[UploadFile]):
+    return {"filenames": [file.filename for file in files]}
+
+
+@app.get("/items/")
+async def read_item(skip: int = Query(0, alias="start", ge=0), limit: int = Query(10, le=100)):
+    return {"skip": skip, "limit": limit}

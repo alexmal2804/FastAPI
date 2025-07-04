@@ -1,5 +1,4 @@
 import inspect
-import random
 import re
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -40,9 +39,11 @@ class User1(BaseModel):
     age: int
     email: EmailStr
 
+
 class Contact(BaseModel):
     email: EmailStr
-    phone: Annotated[str, Field(min_length=7, max_length=15, pattern=r'^[0-9]+$')] | None
+    phone: Annotated[str, Field(min_length=7, max_length=15, pattern=r"^[0-9]+$")] | None
+
 
 class Feedback(BaseModel):
     name: Annotated[str, Field(min_length=3, max_length=50, description="Имя пользователя")]
