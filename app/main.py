@@ -1,98 +1,73 @@
-# main.py
-from typing import List
+from typing import Annotated
 
-from fastapi import FastAPI, Form, Query, UploadFile
-from fastapi.staticfiles import StaticFiles
-
-from .models import Feedback, User1
+from fastapi import FastAPI, Path, Query
 
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+sample_product_1 = {
+    "product_id": 123,
+    "name": "Smartphone",
+    "category": "Electronics",
+    "price": 599.99,
+}
 
-# Пример файковой БД
-fake_users: list[User1] = [
-    {"username": "Alex", "age": 20, "email": "alex@gmail.com "},
-    {"username": "John", "age": 21, "email": "john@gmail.com"},
-    {"username": "Jane", "age": 22, "email": "jane@gmail.com"},
-    {"username": "Jim", "age": 23, "email": "jim@gmail.com"},
-    {"username": "Jill", "age": 24, "email": "jill@gmail.com"},
-    {"username": "Jack", "age": 25, "email": "jack@gmail.com"},
-    {"username": "Bob", "age": 26, "email": "bob@gmail.com"},
-    {"username": "Alice", "age": 27, "email": "alice@gmail.com"},
-    {"username": "Charlie", "age": 28, "email": "charlie@gmail.com"},
-    {"username": "Diana", "age": 29, "email": "diana@gmail.com"},
-    {"username": "Eve", "age": 30, "email": "eve@gmail.com"},
-    {"username": "Frank", "age": 31, "email": "frank@gmail.com"},
-    {"username": "George", "age": 32, "email": "george@gmail.com"},
-    {"username": "Hannah", "age": 33, "email": "hannah@gmail.com"},
-    {"username": "Isaac", "age": 34, "email": "isaac@gmail.com"},
-    {"username": "Julia", "age": 35, "email": "julia@gmail.com"},
-    {"username": "Kevin", "age": 36, "email": "kevin@gmail.com"},
-    {"username": "Liam", "age": 37, "email": "liam@gmail.com"},
-    {"username": "Mia", "age": 38, "email": "mia@gmail.com"},
-    {"username": "Jack", "age": 17, "email": "jack17@gmail.com"},
+sample_product_2 = {
+    "product_id": 456,
+    "name": "Phone Case",
+    "category": "Accessories",
+    "price": 19.99,
+}
+
+sample_product_3 = {
+    "product_id": 789,
+    "name": "Iphone",
+    "category": "Electronics",
+    "price": 1299.99,
+}
+
+sample_product_4 = {
+    "product_id": 101,
+    "name": "Headphones",
+    "category": "Accessories",
+    "price": 99.99,
+}
+
+sample_product_5 = {
+    "product_id": 202,
+    "name": "Smartwatch",
+    "category": "Electronics",
+    "price": 299.99,
+}
+
+sample_products = [
+    sample_product_1,
+    sample_product_2,
+    sample_product_3,
+    sample_product_4,
+    sample_product_5,
 ]
 
-fake_feedbacks: list[Feedback] = []
+
+@app.get("/product/{product_id}")
+def get_product(product_id: Annotated[int, Path(ge=1)]):  # type: ignore
+    return [product for product in sample_products if product["product_id"] == product_id]
 
 
-@app.get("/limit")
-def read_users_limit(limit: int = 10, offset: int = 0):
-    return fake_users[offset : offset + limit]
-
-
-@app.get("/users")
-def read_users(username: str = None, email: str = None, limit: int = 10):
-    filtered_users = fake_users
-    if username:
-        filtered_users = [user for user in fake_users if user["username"].lower() == username.lower()]
-    if email:
-        filtered_users = [user for user in filtered_users if user["email"].lower() == email.lower()]
-    return filtered_users[:limit]
-
-
-@app.get("/all_users")
-def read_all_users():
-    return fake_users
-
-
-@app.post("/add_user", response_model=User1)
-async def add_user(user: User1):
-    fake_users.append({"username": user.username, "age": user.age, "email": user.email})
-    return user
-
-
-@app.post("/feedback")
-async def add_feedback(feedback: Feedback, is_premium: bool = False):
-    fake_feedbacks.append({"name": feedback.name, "message": feedback.message})
-    permium_answer: str = ""
-    if is_premium:
-        permium_answer = "Ваш отзыв будет рассмотрен в приоритетном порядке."
-    return {"message": f"Спасибо, {feedback.name}! Ваш отзыв принят. {permium_answer}"}
-
-
-@app.post("/register/")
-async def register_user(
-    username: str = Form(...),
-    email: str = Form(...),
-    age: int = Form(...),
-    password: str = Form(...),
+@app.get("/products/search")
+def search_product(
+    keyword: Annotated[str, Query()],
+    category: Annotated[str, Query()] | None = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 10,
 ):
-    return {
-        "username": username,
-        "email": email,
-        "age": age,
-        "password_length": len(password),
-    }
+    # Начинаем с копии полного списка продуктов
+    results = sample_products[:]
 
+    # Фильтруем по ключевому слову (поиск подстроки без учета регистра)
+    results = [product for product in results if keyword.lower() in product["name"].lower()]
 
-@app.post("/load_files/")
-async def load_files(files: List[UploadFile]):
-    return {"filenames": [file.filename for file in files]}
-
-
-@app.get("/items/")
-async def read_item(skip: int = Query(0, alias="start", ge=0), limit: int = Query(10, le=100)):
-    return {"skip": skip, "limit": limit}
+    # Если категория указана, дополнительно фильтруем по ней
+    if category:
+        results = [product for product in results if product["category"].lower() == category.lower()]
+    # Применяем лимит к финальному списку
+    return results[:limit]

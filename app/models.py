@@ -55,3 +55,10 @@ class Feedback(BaseModel):
         if contains_bad_words(v):
             raise ValueError("Использование недопустимых слов")
         return v
+
+
+class UserCreate(BaseModel):
+    username: str
+    email: EmailStr
+    age: Annotated[int, Field(ge=0)] | None = None
+    is_subscribed: Annotated[bool, Field(default=False)] | None = None
