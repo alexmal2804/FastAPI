@@ -7,7 +7,7 @@ from .models import Feedback, User1
 app = FastAPI()
 
 # Пример файковой БД
-fake_users: User1 = [
+fake_users: list[User1] = [
     {"username": "Alex", "age": 20, "email": "alex@gmail.com "},
     {"username": "John", "age": 21, "email": "john@gmail.com"},
     {"username": "Jane", "age": 22, "email": "jane@gmail.com"},
@@ -30,19 +30,12 @@ fake_users: User1 = [
     {"username": "Jack", "age": 17, "email": "jack17@gmail.com"},
 ]
 
-fake_feedbacks: Feedback = []
-
-
-@app.get("/users/{user_id}")
-def get_user_by_id(user_id: int):
-    if user_id in fake_users:
-        return fake_users[user_id]
-    return {"error": "User not found"}
+fake_feedbacks: list[Feedback] = []
 
 
 @app.get("/limit")
-def read_users_limit(limit: int = 10, offset: int = 0):
-    return dict(list(fake_users.items())[offset : offset + limit])
+def read_users_limit(limit: int = 10, offset: int = 0):    
+    return fake_users[offset : offset + limit]
 
 
 @app.get("/users")
@@ -67,6 +60,9 @@ async def add_user(user: User1):
 
 
 @app.post("/feedback")
-async def add_feedback(feedback: Feedback):
+async def add_feedback(feedback: Feedback, is_premium: bool = False):
     fake_feedbacks.append({"name": feedback.name, "message": feedback.message})
-    return {"message": f"Спасибо, {feedback.name}! Ваш отзыв принят."}
+    permium_answer: str = ""
+    if is_premium:
+        permium_answer = "Ваш отзыв будет рассмотрен в приоритетном порядке."
+    return {"message": f"Спасибо, {feedback.name}! Ваш отзыв принят. {permium_answer}"}

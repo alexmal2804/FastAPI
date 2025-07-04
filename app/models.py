@@ -3,7 +3,7 @@ import random
 import re
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
-from typing_extensions import Annotated
+from typing_extensions import Annotated, Optional
 
 
 # Патч для исправления проблемы с pymorphy2 в Python 3.13
@@ -34,22 +34,20 @@ def contains_bad_words(text):
     return False
 
 
-class User(BaseModel):
-    name: str
-    id: int = random.randint(1, 1000)
-    age: int = 18
-
-
 class User1(BaseModel):
     id: int
     username: str
     age: int
     email: EmailStr
 
+class Contact(BaseModel):
+    email: EmailStr
+    phone: Annotated[str, Field(min_length=7, max_length=15, pattern=r'^[0-9]+$')] | None
 
 class Feedback(BaseModel):
-    name: Annotated[str, Field(min_length=2, max_length=50)]
-    message: Annotated[str, Field(min_length=10, max_length=500)]
+    name: Annotated[str, Field(min_length=3, max_length=50, description="Имя пользователя")]
+    message: Annotated[Optional[str], Field(min_length=10, max_length=500)]
+    contact: Annotated[Contact, Field(description="Контактная информация пользователя")]
 
     @field_validator("message", mode="before")
     def message_must_be_correct(cls, v):
