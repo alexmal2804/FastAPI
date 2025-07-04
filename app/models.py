@@ -62,3 +62,8 @@ class UserCreate(BaseModel):
     email: EmailStr
     age: Annotated[int, Field(ge=0)] | None = None
     is_subscribed: Annotated[bool, Field(default=False)] | None = None
+
+
+class LoginInput(BaseModel):
+    username: str
+    password: str

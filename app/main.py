@@ -1,73 +1,74 @@
-from typing import Annotated
+from uuid import uuid4
 
-from fastapi import FastAPI, Path, Query
+from fastapi import FastAPI, HTTPException, Request, Response
+
+from .models import LoginInput
 
 
 app = FastAPI()
 
-sample_product_1 = {
-    "product_id": 123,
-    "name": "Smartphone",
-    "category": "Electronics",
-    "price": 599.99,
+fake_user_db = {
+    "user123": {
+        "username": "user123",
+        "password": "password123",
+        "email": "user123@example.com",
+        "full_name": "John Doe",
+    }
 }
 
-sample_product_2 = {
-    "product_id": 456,
-    "name": "Phone Case",
-    "category": "Accessories",
-    "price": 19.99,
-}
-
-sample_product_3 = {
-    "product_id": 789,
-    "name": "Iphone",
-    "category": "Electronics",
-    "price": 1299.99,
-}
-
-sample_product_4 = {
-    "product_id": 101,
-    "name": "Headphones",
-    "category": "Accessories",
-    "price": 99.99,
-}
-
-sample_product_5 = {
-    "product_id": 202,
-    "name": "Smartwatch",
-    "category": "Electronics",
-    "price": 299.99,
-}
-
-sample_products = [
-    sample_product_1,
-    sample_product_2,
-    sample_product_3,
-    sample_product_4,
-    sample_product_5,
-]
+session_store = {}
 
 
-@app.get("/product/{product_id}")
-def get_product(product_id: Annotated[int, Path(ge=1)]):  # type: ignore
-    return [product for product in sample_products if product["product_id"] == product_id]
+# 🚪 /login: проверка логина и установка cookie
+@app.post("/login")
+def login(data: LoginInput, response: Response):
+    user = fake_user_db.get(data.username)
+    if not user or user["password"] != data.password:
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    session_token = str(uuid4())
+    user["session_token"] = session_token
+    response.set_cookie(
+        key="session_token",
+        value=session_token,
+        httponly=True,
+        secure=False,
+        samesite="Lax",
+        max_age=3600,  # Cookie valid for 1 hour
+        path="/",
+    )
+    return {"message": "Login successful"}
 
 
-@app.get("/products/search")
-def search_product(
-    keyword: Annotated[str, Query()],
-    category: Annotated[str, Query()] | None = None,
-    limit: Annotated[int, Query(ge=1, le=100)] = 10,
+# 🔒 /user: защищенный маршрут
+@app.get("/user")
+def get_user(request: Request):
+    session_token = request.cookies.get("session_token")
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    username = session_store.get(session_token)
+    if not username:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    user = fake_user_db.get(username)
+    return {
+        "username": user["username"],
+        "email": user["email"],
+        "full_name": user["full_name"],
+    }
+
+
+# ❌ /logout: выход из системы
+@app.post("/logout")
+def logout(
+    request: Request,
+    response: Response,
 ):
-    # Начинаем с копии полного списка продуктов
-    results = sample_products[:]
-
-    # Фильтруем по ключевому слову (поиск подстроки без учета регистра)
-    results = [product for product in results if keyword.lower() in product["name"].lower()]
-
-    # Если категория указана, дополнительно фильтруем по ней
-    if category:
-        results = [product for product in results if product["category"].lower() == category.lower()]
-    # Применяем лимит к финальному списку
-    return results[:limit]
+    session_token = request.cookies.get("session_token")
+    if not session_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    else:
+        session_store.pop(session_token, None)
+        # Удаляем cookie
+        response.delete_cookie("session_token", path="/")
+    return {"message": "Logout successful"}
