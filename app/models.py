@@ -1,6 +1,7 @@
 import inspect
 import re
 
+from fastapi import Header
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing_extensions import Annotated, Optional
 
@@ -60,10 +61,27 @@ class Feedback(BaseModel):
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
-    age: Annotated[int, Field(ge=0)] | None = None
+    age: Annotated[int, Field(ge=0)] | None = None  
     is_subscribed: Annotated[bool, Field(default=False)] | None = None
 
 
 class LoginInput(BaseModel):
     username: str
     password: str
+
+
+class CommonHeaders(BaseModel):
+    user_agent: Annotated[str | None, Header(description="User-Agent header")] = None
+    accept_language: Annotated[str | None, Header(description="Accept-Language header")] = None
+
+    @field_validator("accept_language", mode="before")
+    def validate_accept_language(cls, v):
+        reg_accept_language = re.compile(
+            r"^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
+            r"(\s*;\s*q=(0(\.[0-9]{1,3})?|1(\.0{1,3})?))?"
+            r"(\s*,\s*[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
+            r"(\s*;\s*q=(0(\.[0-9]{1,3})?|1(\.0{1,3})?))?)*$"
+        )
+        if v and not re.match(reg_accept_language, v):
+            raise ValueError("Accept-Language header is invalid")
+        return v        
