@@ -1,61 +1,56 @@
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response, Cookie
 
 from .models import LoginInput
 
+from itsdangerous import URLSafeTimedSerializer
 
 app = FastAPI()
 
-fake_user_db = {
-    "user123": {
+fake_user_db = [
+    {"user123": {
         "username": "user123",
         "password": "password123",
-        "email": "user123@example.com",
-        "full_name": "John Doe",
-    }
-}
+    }},
+    {"user456": {
+        "username": "user456",
+        "password": "password456",
+    }},
+    {"user789": {
+        "username": "user789",
+        "password": "password789",
+    }},
+    {"user101": {
+        "username": "user101",
+        "password": "password101",
+    }}
+]
 
 session_store = {}
 
+token_serializer = URLSafeTimedSerializer(secret_key="secret")  # Простой сериализатор для токена
 
 # 🚪 /login: проверка логина и установка cookie
 @app.post("/login")
 def login(data: LoginInput, response: Response):
-    user = fake_user_db.get(data.username)
-    if not user or user["password"] != data.password:
-        raise HTTPException(status_code=401, detail="Invalid username or password")
-    session_token = str(uuid4())
-    user["session_token"] = session_token
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=False,
-        samesite="Lax",
-        max_age=3600,  # Cookie valid for 1 hour
-        path="/",
-    )
-    return {"message": "Login successful"}
+    for user_dict in fake_user_db:  # Итерируем по списку
+        for _, person in user_dict.items():  # Извлекаем вложенные словари
+            if person["username"] == data.username and person["password"] == data.password: 
+                session_token = token_serializer.dumps(person)
+                session_store[session_token] = person
+                response.set_cookie(key="session_token", value=session_token, httponly=True)
+                return {"session_token": session_token}
+    raise HTTPException(status_code=401, detail="Invalid credentials")
 
 
 # 🔒 /user: защищенный маршрут
 @app.get("/user")
-def get_user(request: Request):
-    session_token = request.cookies.get("session_token")
-    if not session_token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    username = session_store.get(session_token)
-    if not username:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    user = fake_user_db.get(username)
-    return {
-        "username": user["username"],
-        "email": user["email"],
-        "full_name": user["full_name"],
-    }
+def get_user(session_token: str = Cookie(None)):
+    user = token_serializer.loads(session_token, max_age=3600) if session_token else None
+    if user:
+        return user
+    return {"message": "Unauthorized"}
 
 
 # ❌ /logout: выход из системы

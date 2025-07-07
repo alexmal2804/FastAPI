@@ -12,6 +12,7 @@ pydantic = {extras = ["email"], version = "^2.11.7"}
 pymorphy2 = "^0.9.1"
 setuptools = "^80.9.0"
 python-multipart = "^0.0.20"
+itsdangerous = "^2.2.0"
 
 [tool.poetry.group.dev.dependencies]
 isort = "*"
