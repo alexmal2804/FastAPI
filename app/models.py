@@ -73,6 +73,7 @@ class LoginInput(BaseModel):
 class CommonHeaders(BaseModel):
     user_agent: Annotated[str | None, Header(description="User-Agent header")] = None
     accept_language: Annotated[str | None, Header(description="Accept-Language header")] = None
+    x_current_version: Annotated[str | None, Header(alias="x-current-version", description="X-Current-Version header")]
 
     @field_validator("accept_language", mode="before")
     def validate_accept_language(cls, v):
@@ -84,4 +85,10 @@ class CommonHeaders(BaseModel):
         )
         if v and not re.match(reg_accept_language, v):
             raise ValueError("Accept-Language header is invalid")
-        return v        
+        return v  
+
+    @field_validator("x_current_version", mode="before")
+    def validate_x_current_version(cls, v):
+        if v and not re.match(r"^\d+\.\d+\.\d+$", v):
+            raise ValueError("X-Current-Version header must be in format X.Y.Z")
+        return v      
