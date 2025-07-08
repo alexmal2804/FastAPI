@@ -1,58 +1,54 @@
-from typing import Annotated
-from fastapi import FastAPI, HTTPException, Header, Request
-import re
-import datetime
-from .models import CommonHeaders
+from fastapi import FastAPI, HTTPException, Depends, status
+from pydantic import BaseModel
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from .models import User, UserInDB
+from passlib.context import CryptContext
 
 app = FastAPI()
+security = HTTPBasic()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-reg_accept_language = re.compile(
-    r"^[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
-    r"(\s*;\s*q=(0(\.[0-9]{1,3})?|1(\.0{1,3})?))?"
-    r"(\s*,\s*[a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
-    r"(\s*;\s*q=(0(\.[0-9]{1,3})?|1(\.0{1,3})?))?)*$"
-)
 
-MINIMUM_APP_VERSION = "0.0.2"
+fake_users_db = [
+    # {"username": "alex2", "hashed_password": pwd_context.hash("test_password")}
+]
 
-@app.get("/headers")
-def get_headers(headers: Annotated[CommonHeaders, Header()]):
-    if headers.user_agent is None:
-        raise HTTPException(status_code=400, detail="User-Agent header is required")
-    if headers.accept_language is None:
+def get_user(username: str): 
+    for user in fake_users_db:
+        if user["username"] == username:  # Доступ через ключ словаря
+            return user
+    return None
+
+def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
+    user = get_user(credentials.username)
+    if user and pwd_context.verify(credentials.password, user["hashed_password"]):
+        return UserInDB(**user)
+    else:
         raise HTTPException(
-            status_code=400, detail="Accept-Language header is required"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Basic"},
         )
-    x_current_version = headers.x_current_version
-    if x_current_version is None:
-        raise HTTPException(status_code=400, detail="X-Current-Version header is required")
-    if x_current_version < MINIMUM_APP_VERSION:
-        raise HTTPException(
-            status_code=422,
-            detail=f"X-Current-Version must be at least {MINIMUM_APP_VERSION}"
-        )
-    return {"headers": headers}
 
 
-@app.get("/info")
-def get_info(headers: Annotated[CommonHeaders, Header()]):
-    if headers.user_agent is None:
-        raise HTTPException(status_code=400, detail="User-Agent header is required")
-    if headers.accept_language is None:
-        raise HTTPException(
-            status_code=400, detail="Accept-Language header is required"
+@app.get("/login")
+def login(user: UserInDB = Depends(authenticate_user)):
+    return {"message": f"Welcome back! {user.username}"}
+
+
+@app.get("/register")
+def register(user: User = Depends(User)):
+    if not user.username or not user.password:
+        raise HTTPException(status_code=401, detail="Invalid user information")
+    if user:
+        userInDB = UserInDB(
+            username=user.username, hashed_password=pwd_context.hash(user.password)
         )
-    x_server_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    x_current_version = headers.x_current_version
-    if x_current_version is None:
-        raise HTTPException(status_code=400, detail="X-Current-Version header is required")
-    if x_current_version < MINIMUM_APP_VERSION:
+        fake_users_db.append(userInDB)
+        return {"message": "User registered successfully!", "user_info": fake_users_db}
+    else:
         raise HTTPException(
-            status_code=422,
-            detail=f"X-Current-Version must be at least {MINIMUM_APP_VERSION}"
+            status_code=401,
+            detail="User already exists or invalid user information",
+            headers={"WWW-Authenticate": "Basic"},
         )
-    return {
-        "message": "Добро пожаловать! Ваши заголовки успешно обработаны.",
-        "headers": headers,
-        "X-Server-Time": x_server_time
-    }

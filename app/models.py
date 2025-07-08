@@ -92,3 +92,14 @@ class CommonHeaders(BaseModel):
         if v and not re.match(r"^\d+\.\d+\.\d+$", v):
             raise ValueError("X-Current-Version header must be in format X.Y.Z")
         return v      
+    
+class UserBase(BaseModel):
+    username: Annotated[str, Field(min_length=3, max_length=50)]
+
+class User(UserBase):
+    password: Annotated[str, Field(min_length=8, max_length=100)]   
+
+class UserInDB(UserBase):
+    hashed_password: Annotated[str, Field(min_length=8, max_length=100)]
+    
+
