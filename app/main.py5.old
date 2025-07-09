@@ -1,0 +1,53 @@
+from fastapi import FastAPI, HTTPException, Depends, status, Body
+from pydantic import BaseModel
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from .models import User, UserInDB
+from passlib.context import CryptContext
+
+app = FastAPI()
+security = HTTPBasic()
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+fake_users_db = [
+    # {"username": "alex2", "hashed_password": pwd_context.hash("test_password")}
+]
+
+def get_user(username: str): 
+    for user in fake_users_db:
+        if user.username == username: 
+            return user
+    return None
+
+def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
+    user_data = get_user(credentials.username)
+    if user_data and pwd_context.verify(credentials.password, user_data.hashed_password):
+        return user_data
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Invalid credentials",
+        headers={"WWW-Authenticate": "Basic"},
+    ) 
+    
+
+
+@app.get("/login")
+def login(user: UserInDB = Depends(authenticate_user)):
+    return {"message": f"Welcome back! {user.username}"}
+
+
+@app.post("/register")
+def register(user: User ):
+    if not user.username or not user.password:
+        raise HTTPException(status_code=401, detail="Invalid user information")
+    if get_user(user.username):
+        raise HTTPException(
+            status_code=401,
+            detail="User already exists or invalid user information",
+            headers={"WWW-Authenticate": "Basic"},
+        )
+    userInDB = UserInDB(
+        username=user.username, hashed_password=pwd_context.hash(user.password)
+    )
+    fake_users_db.append(userInDB)
+    return {"message": "User registered successfully!", "user_info": fake_users_db}

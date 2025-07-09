@@ -100,6 +100,6 @@ class User(UserBase):
     password: Annotated[str, Field(min_length=8, max_length=100)]   
 
 class UserInDB(UserBase):
-    hashed_password: Annotated[str, Field(min_length=8, max_length=100)]
+    hashed_password: Annotated[str, Field(min_length=8, max_length=100)] = None  # Сделать поле необязательным
     
 

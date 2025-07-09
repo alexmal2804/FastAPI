@@ -1,54 +1,48 @@
-from fastapi import FastAPI, HTTPException, Depends, status
-from pydantic import BaseModel
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from email.header import Header
+from math import dist
+from fastapi import Depends, FastAPI, HTTPException
+from typing import Annotated, Optional
+
+from fastapi.security import HTTPBearer
+from .db import fake_users_db
 from .models import User, UserInDB
-from passlib.context import CryptContext
+from .security import (
+    create_jwt_token,
+    get_user_from_token,
+)
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI()
-security = HTTPBasic()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+auth_scheme = HTTPBearer() # Define the auth scheme for dependency injection
+
+@app.post("/login")
+async def login(user: User):
+    logging.info(f"Received login request for user: {user.username}")
+    # Check if the user exists in the fake database
+    for db_user in fake_users_db:
+        logging.info(f"Checking user: {db_user['username']}")
+        if (
+            db_user["username"] == user.username
+            and user.password == db_user["password"]
+        ):
+            # Create a UserInDB instance
+            user_in_db = UserInDB(
+                username=db_user["username"], password=db_user["password"]
+            )
+            # Create a JWT token for the user
+            token = create_jwt_token(user_in_db)
+            logging.info(f"Token generated: {token}")
+            return {"access_token": token, "token_type": "bearer"}
+    # If user not found, raise an HTTP exception
+    raise HTTPException(status_code=400, detail="Invalid username or password")
 
 
-fake_users_db = [
-    # {"username": "alex2", "hashed_password": pwd_context.hash("test_password")}
-]
-
-def get_user(username: str): 
-    for user in fake_users_db:
-        if user["username"] == username:  # Доступ через ключ словаря
-            return user
-    return None
-
-def authenticate_user(credentials: HTTPBasicCredentials = Depends(security)):
-    user = get_user(credentials.username)
-    if user and pwd_context.verify(credentials.password, user["hashed_password"]):
-        return UserInDB(**user)
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-
-
-@app.get("/login")
-def login(user: UserInDB = Depends(authenticate_user)):
-    return {"message": f"Welcome back! {user.username}"}
-
-
-@app.get("/register")
-def register(user: User = Depends(User)):
-    if not user.username or not user.password:
-        raise HTTPException(status_code=401, detail="Invalid user information")
-    if user:
-        userInDB = UserInDB(
-            username=user.username, hashed_password=pwd_context.hash(user.password)
-        )
-        fake_users_db.append(userInDB)
-        return {"message": "User registered successfully!", "user_info": fake_users_db}
-    else:
-        raise HTTPException(
-            status_code=401,
-            detail="User already exists or invalid user information",
-            headers={"WWW-Authenticate": "Basic"},
-        )
+@app.get("/protected_secure", dependencies=[Depends(auth_scheme)])
+async def protected_secure(user: UserInDB = Depends(get_user_from_token)):
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"message": "This is a protected route", "user": user}
