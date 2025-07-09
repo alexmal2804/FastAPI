@@ -101,5 +101,12 @@ class User(UserBase):
 
 class UserInDB(UserBase):
     hashed_password: Annotated[str, Field(min_length=8, max_length=100)] = None  # Сделать поле необязательным
-    
+
+class UserWithData(UserBase):
+    fill_name: Annotated[str, Field(min_length=3, max_length=50)] | None = None
+    email: Annotated[EmailStr, Field(description="Email address of the user")] | None = None
+    disabled: Annotated[bool, Field(default=False, description="Is the user disabled?")] = False
+    roles: Annotated[list[str], Field(description="Roles assigned to the user")] = []
+
+
 
