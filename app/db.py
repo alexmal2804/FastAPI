@@ -1,5 +1,6 @@
 from .models import UserWithData
 
+
 # Фиктивные данные пользователей (в реальном проекте тут будет БД)
 USERS_DATA = [
     {
@@ -8,7 +9,7 @@ USERS_DATA = [
         "roles": ["admin"],
         "full_name": "Admin User",
         "email": "admin@example.com",
-        "disabled": False
+        "disabled": False,
     },
     {
         "username": "user",
@@ -16,9 +17,10 @@ USERS_DATA = [
         "roles": ["user"],
         "full_name": "Regular User",
         "email": "user@example.com",
-        "disabled": False
+        "disabled": False,
     },
 ]
+
 
 def get_user(username: str) -> UserWithData | None:
     """Получаем пользователя по имени (без пароля)"""

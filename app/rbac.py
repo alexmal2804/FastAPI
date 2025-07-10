@@ -1,8 +1,11 @@
-from fastapi import HTTPException, status
 from functools import wraps
+
+from fastapi import HTTPException, status
+
 
 class PermissionChecker:
     """Декоратор для проверки ролей пользователя"""
+
     def __init__(self, roles: list[str]):
         self.roles = roles  # Список разрешённых ролей
 
@@ -17,9 +20,7 @@ class PermissionChecker:
                 return await func(*args, **kwargs)
 
             if not any(role in user.roles for role in self.roles):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Недостаточно прав для доступа"
-                )
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Недостаточно прав для доступа")
             return await func(*args, **kwargs)
+
         return wrapper

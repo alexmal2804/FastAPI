@@ -61,7 +61,7 @@ class Feedback(BaseModel):
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
-    age: Annotated[int, Field(ge=0)] | None = None  
+    age: Annotated[int, Field(ge=0)] | None = None
     is_subscribed: Annotated[bool, Field(default=False)] | None = None
 
 
@@ -85,28 +85,29 @@ class CommonHeaders(BaseModel):
         )
         if v and not re.match(reg_accept_language, v):
             raise ValueError("Accept-Language header is invalid")
-        return v  
+        return v
 
     @field_validator("x_current_version", mode="before")
     def validate_x_current_version(cls, v):
         if v and not re.match(r"^\d+\.\d+\.\d+$", v):
             raise ValueError("X-Current-Version header must be in format X.Y.Z")
-        return v      
-    
+        return v
+
+
 class UserBase(BaseModel):
     username: Annotated[str, Field(min_length=3, max_length=50)]
 
+
 class UserWithData(UserBase):
-    password: Annotated[str, Field(min_length=8, max_length=100)]   
+    password: Annotated[str, Field(min_length=8, max_length=100)]
+
 
 class UserLogin(UserBase):
     hashed_password: Annotated[str, Field(min_length=8, max_length=100)] = None  # Сделать поле необязательным
+
 
 class UserWithData(UserBase):
     fill_name: Annotated[str, Field(min_length=3, max_length=50)] | None = None
     email: Annotated[EmailStr, Field(description="Email address of the user")] | None = None
     disabled: Annotated[bool, Field(default=False, description="Is the user disabled?")] = False
     roles: Annotated[list[str], Field(description="Roles assigned to the user")] = []
-
-
-

@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI
 from pydantic import BaseModel
+
 from .database import supabase  # Importing the database connection function
+
 
 app = FastAPI()
 
