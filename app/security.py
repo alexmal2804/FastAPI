@@ -2,14 +2,15 @@ from typing import Optional
 import jwt
 import datetime
 from fastapi import Depends
-from .db import fake_users_db
-from .models import User, UserInDB
+from .db import USERS_DATA
+from .models import UserWithData, UserLogin
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from passlib.context import CryptContext    
 from fastapi import HTTPException, status
-security = HTTPBasic()
 from fastapi.security import OAuth2PasswordBearer
 import logging
+
+security = HTTPBasic()
 
 logger = logging.getLogger("jwt_debug")
 logger.setLevel(logging.DEBUG)
@@ -22,7 +23,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 15
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Function to create a JWT token
-def create_jwt_token(user: UserInDB):
+def create_jwt_token(user: UserLogin):
     expiration = datetime.datetime.utcnow() + datetime.timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     token_data = {
         "sub": user.username,
@@ -31,16 +32,16 @@ def create_jwt_token(user: UserInDB):
     token = jwt.encode(token_data, SECRET_KEY, algorithm=ALGORITHM)
     return token
 
-def get_user(username: str) -> Optional[UserInDB]:
-    for user_dict in fake_users_db:
-        user = UserInDB(**user_dict)  # Преобразование словаря в объект UserInDB
+def get_user(username: str) -> Optional[UserLogin]:
+    for user_dict in USERS_DATA:
+        user = UserLogin(**user_dict)  # Преобразование словаря в объект UserLogin
         if user.username == username:
             return user
     return None
     
 
 # Function to get user data from the fake database
-def get_user_from_token(token: str = Depends(oauth2_scheme)) -> Optional[UserInDB]:
+def get_user_from_token(token: str = Depends(oauth2_scheme)) -> Optional[UserLogin]:
     try:
         logger.debug(f"Decoding token: {token}")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

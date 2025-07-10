@@ -1,4 +1,4 @@
-from models import UserWithData
+from .models import UserWithData
 
 # Фиктивные данные пользователей (в реальном проекте тут будет БД)
 USERS_DATA = [

@@ -96,10 +96,10 @@ class CommonHeaders(BaseModel):
 class UserBase(BaseModel):
     username: Annotated[str, Field(min_length=3, max_length=50)]
 
-class User(UserBase):
+class UserWithData(UserBase):
     password: Annotated[str, Field(min_length=8, max_length=100)]   
 
-class UserInDB(UserBase):
+class UserLogin(UserBase):
     hashed_password: Annotated[str, Field(min_length=8, max_length=100)] = None  # Сделать поле необязательным
 
 class UserWithData(UserBase):
