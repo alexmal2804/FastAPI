@@ -1,0 +1,21 @@
+from fastapi import Depends, FastAPI
+from pydantic import BaseModel
+from motor.motor_asyncio import AsyncIOMotorDatabase
+from .database import get_mongo_db, get_supabase  # Importing the database connection function
+
+app = FastAPI()
+
+class Item(BaseModel):
+    name: str
+
+@app.post("/items/")
+async def create_item(item: Item, supabase=Depends(get_supabase)):
+    supabase.table("items").insert({"name": item.name}).execute()
+    return {"message": f"Item {item.name} added successfully"}
+
+@app.post("/names")
+async def create_name(name: str, mongo_db: AsyncIOMotorDatabase=Depends(get_mongo_db)):
+    result = await mongo_db.names.insert_one({"name": name})
+    if not result.acknowledged:
+        return {"error": "Failed to add name"}
+    return {"message": f"Name {name} added successfully", "id": str(result.inserted_id)}

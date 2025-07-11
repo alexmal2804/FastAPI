@@ -5,7 +5,7 @@ from fastapi import Header
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing_extensions import Annotated, Optional
 
-
+'''
 # Патч для исправления проблемы с pymorphy2 в Python 3.13
 if not hasattr(inspect, "getargspec"):
 
@@ -92,13 +92,13 @@ class CommonHeaders(BaseModel):
         if v and not re.match(r"^\d+\.\d+\.\d+$", v):
             raise ValueError("X-Current-Version header must be in format X.Y.Z")
         return v
-
+'''
 
 class UserBase(BaseModel):
-    username: Annotated[str, Field(min_length=3, max_length=50)]
+    name: Annotated[str, Field(min_length=3, max_length=50)]
 
 
-class UserWithData(UserBase):
+class UserWithPassword(UserBase):
     password: Annotated[str, Field(min_length=8, max_length=100)]
 
 
@@ -111,3 +111,8 @@ class UserWithData(UserBase):
     email: Annotated[EmailStr, Field(description="Email address of the user")] | None = None
     disabled: Annotated[bool, Field(default=False, description="Is the user disabled?")] = False
     roles: Annotated[list[str], Field(description="Roles assigned to the user")] = []
+
+class Todo (BaseModel):
+    title: Annotated[str, Field(min_length=3, max_length=50)]
+    description: Annotated[str, Field(max_length=200)]  | None = None
+    completed: bool = False
