@@ -1,5 +1,6 @@
 import pytest
 
+
 """
 def test_calculate_sum(client):
     # Тест 1: валидные входные данные
