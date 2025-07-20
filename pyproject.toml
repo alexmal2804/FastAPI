@@ -19,6 +19,7 @@ passlib = ">=1.7.4"
 unicorn = "^2.1.3"
 supabase = "^2.16.0"
 dotenv = "^0.9.9"
+pytest = "^8.4.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "*"
